@@ -9,9 +9,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,9 +28,11 @@ import com.datastax.mgmtapi.resources.models.KeyspaceRequest;
 import com.datastax.mgmtapi.resources.models.ScrubRequest;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
+import org.assertj.core.api.Assertions;
 import org.jboss.resteasy.core.messagebody.WriterUtility;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -458,5 +462,41 @@ public class NonDestructiveOpsIntegrationTest extends BaseDockerIntegrationTest
                 }).join();
         assertNotNull(response);
         assertNotEquals("", response);
+    }
+
+    @Test
+    public void testCreateKeyspace() throws IOException, URISyntaxException
+    {
+        assumeTrue(IntegrationTestUtils.shouldRun());
+        ensureStarted();
+
+        NettyHttpClient client = new NettyHttpClient(BASE_URL);
+        Map<String, Integer> replicationSettings = ImmutableMap.of("Cassandra", 1);
+
+        URI uri = new URIBuilder(BASE_PATH + "/ops/keyspace/create")
+                .addParameter("keyspaceName", "someTestKeyspace")
+                .addParameter("replicationSettings", replicationSettings.toString())
+                .build();
+        boolean requestSuccessful = client.post(uri.toURL(), null)
+                .thenApply(r -> r.status().code() == HttpStatus.SC_OK).join();
+        assertTrue(requestSuccessful);
+
+        // empty replication settings or wrong DC names should fail
+        uri = new URIBuilder(BASE_PATH + "/ops/keyspace/create")
+                .addParameter("keyspaceName", "someTestKeyspace")
+                .addParameter("replicationSettings", "")
+                .build();
+        requestSuccessful = client.post(uri.toURL(), null)
+                .thenApply(r -> r.status().code() == HttpStatus.SC_OK).join();
+        Assertions.assertThat(requestSuccessful).isFalse();
+
+        // empty replication settings or wrong DC names should fail
+        uri = new URIBuilder(BASE_PATH + "/ops/keyspace/create")
+                .addParameter("keyspaceName", "someTestKeyspace")
+                .addParameter("replicationSettings", "")
+                .build();
+        requestSuccessful = client.post(uri.toURL(), null)
+                .thenApply(r -> r.status().code() == HttpStatus.SC_OK).join();
+        Assertions.assertThat(requestSuccessful).isFalse();
     }
 }

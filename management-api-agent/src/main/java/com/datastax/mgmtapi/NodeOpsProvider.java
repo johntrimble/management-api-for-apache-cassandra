@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,10 +26,12 @@ import org.slf4j.LoggerFactory;
 import com.datastax.mgmtapi.rpc.Rpc;
 import com.datastax.mgmtapi.rpc.RpcParam;
 import com.datastax.mgmtapi.rpc.RpcRegistry;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import org.apache.cassandra.auth.AuthenticatedUser;
 import org.apache.cassandra.auth.IRoleManager;
 import org.apache.cassandra.auth.RoleOptions;
 import org.apache.cassandra.auth.RoleResource;
+import org.apache.cassandra.db.ConsistencyLevel;
 
 /**
  * Replace JMX calls with CQL 'CALL' methods via the the Rpc framework
@@ -317,5 +320,19 @@ public class NodeOpsProvider
     public List<Map<String, List<Map<String, String>>>> getStreamInfo()
     {
         return ShimLoader.instance.get().getStreamInfo();
+    }
+
+    @Rpc(name = "createKeyspace")
+    public void createKeyspace(String keyspaceName, Map<String, String> replicationSettings) throws IOException
+    {
+        logger.debug("Creating keyspace {} with replication settings {}", keyspaceName, replicationSettings);
+        Map<String, Integer> settings = new HashMap<>();
+        replicationSettings.forEach((k,v) -> settings.put(k, Integer.valueOf(v)));
+
+        ShimLoader.instance.get().processQuery(SchemaBuilder.createKeyspace(keyspaceName)
+                        .ifNotExists()
+                        .withNetworkTopologyStrategy(settings)
+                        .asCql(),
+                ConsistencyLevel.ONE);
     }
 }

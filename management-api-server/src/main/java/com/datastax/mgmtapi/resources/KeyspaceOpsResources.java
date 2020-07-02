@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -93,6 +94,39 @@ public class KeyspaceOpsResources
             }
 
             cqlService.executePreparedStatement(app.dbUnixSocketFile, "CALL NodeOps.loadNewSSTables(?, ?)", keyspaceName, table);
+
+            return Response.ok("OK").build();
+        }
+        catch (ConnectionClosedException e)
+        {
+            return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity("Internal connection to Cassandra closed").build();
+        }
+        catch (Throwable t)
+        {
+            logger.error("Error when executing request", t);
+            return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(t.getLocalizedMessage()).build();
+        }
+    }
+
+    @POST
+    @Path("/create")
+    @Produces(MediaType.TEXT_PLAIN)
+    @Operation(summary = "Create a new keyspace with the given name and replication settings")
+    public Response create(@QueryParam(value="keyspaceName") String keyspaceName, @QueryParam(value="replicationSettings") Map<String, String> replicationSettings)
+    {
+        try
+        {
+            if (StringUtils.isBlank(keyspaceName))
+            {
+                return Response.status(HttpStatus.SC_BAD_REQUEST).entity("Must provide a keyspace name").build();
+            }
+
+            if (null == replicationSettings || replicationSettings.isEmpty())
+            {
+                return Response.status(HttpStatus.SC_BAD_REQUEST).entity("replicationSettings must be provided").build();
+            }
+
+            cqlService.executePreparedStatement(app.dbUnixSocketFile, "CALL NodeOps.createKeyspace(?, ?)", keyspaceName, replicationSettings);
 
             return Response.ok("OK").build();
         }
