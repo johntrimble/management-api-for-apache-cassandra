@@ -28,7 +28,9 @@ jobs:
           </settings>
           EOF
           cp ~/.m2/settings.xml settings.xml
-          docker build \
+
+          docker buildx build --load \
+            --platform linux/amd64 \
             -t management-api-for-apache-cassandra-builder \
             -f ./Dockerfile-build ./
 
