@@ -1,4 +1,23 @@
-FROM --platform=linux/amd64 management-api-for-apache-cassandra-builder as builder
+FROM --platform=linux/amd64 maven:3.6.3-adoptopenjdk-8 as builder
+
+WORKDIR /build
+
+COPY pom.xml ./
+COPY management-api-agent/pom.xml ./management-api-agent/pom.xml
+COPY management-api-common/pom.xml ./management-api-common/pom.xml
+COPY management-api-server/pom.xml ./management-api-server/pom.xml
+COPY management-api-shim-3.x/pom.xml ./management-api-shim-3.x/pom.xml
+COPY management-api-shim-4.x/pom.xml ./management-api-shim-4.x/pom.xml
+# this duplicates work done in the next steps, but this should provide
+# a solid cache layer that only gets reset on pom.xml changes
+RUN mvn -q -ff -T 1C install && rm -rf target
+
+COPY management-api-agent ./management-api-agent
+COPY management-api-common ./management-api-common
+COPY management-api-server ./management-api-server
+COPY management-api-shim-3.x ./management-api-shim-3.x
+COPY management-api-shim-4.x ./management-api-shim-4.x
+RUN mvn -q -ff package -DskipTests
 
 FROM cassandra:3.11
 

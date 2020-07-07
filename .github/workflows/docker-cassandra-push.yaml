@@ -31,10 +31,10 @@ jobs:
 
           docker buildx inspect
 
-          docker buildx build --load \
-            --platform linux/amd64 \
-            -t management-api-for-apache-cassandra-builder \
-            -f ./Dockerfile-build ./
+          # docker buildx build --load \
+          #   --platform linux/amd64 \
+          #   -t management-api-for-apache-cassandra-builder \
+          #   -f ./Dockerfile-build ./
 
           docker buildx build --push \
             --tag johntrimble/cassandra-mgmtapi-multiarch:3.11.6 \
