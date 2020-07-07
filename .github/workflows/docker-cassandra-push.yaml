@@ -28,10 +28,10 @@ jobs:
           </settings>
           EOF
           cp ~/.m2/settings.xml settings.xml
-          docker buildx build \
-            --platform linux/amd64,linux/arm64  \
+          docker build \
             -t management-api-for-apache-cassandra-builder \
             -f ./Dockerfile-build ./
+
           docker buildx build --push \
             --tag johntrimble/cassandra-mgmtapi-multiarch:3.11.6 \
             --file Dockerfile-3_11 \

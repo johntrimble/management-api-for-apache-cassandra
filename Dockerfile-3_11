@@ -1,4 +1,4 @@
-FROM management-api-for-apache-cassandra-builder as builder
+FROM --platform=linux/amd64 management-api-for-apache-cassandra-builder as builder
 
 FROM cassandra:3.11
 
