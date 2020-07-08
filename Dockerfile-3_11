@@ -54,8 +54,8 @@ COPY scripts/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
   ln -sf /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
 
-RUN rm /opt/cassandra/lib/netty-all-4.0.44.Final.jar
-ADD https://search.maven.org/remotecontent?filepath=io/netty/netty-all/4.1.50.Final/netty-all-4.1.50.Final.jar /opt/cassandra/lib/netty-all-4.1.50.Final.jar
+RUN rm /opt/cassandra/lib/netty-all-4.0.44.Final.jar && \
+  wget "https://search.maven.org/remotecontent?filepath=io/netty/netty-all/4.1.50.Final/netty-all-4.1.50.Final.jar" -O /opt/cassandra/lib/netty-all-4.1.50.Final.jar
 
 EXPOSE 9103
 EXPOSE 8080
