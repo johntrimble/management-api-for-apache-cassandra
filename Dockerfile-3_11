@@ -21,9 +21,6 @@ RUN mvn -q -ff package -DskipTests
 
 FROM cassandra:3.11
 
-RUN rm /opt/cassandra/lib/netty-all-*.jar
-ADD https://search.maven.org/remotecontent?filepath=io/netty/netty-all/4.1.50.Final/netty-all-4.1.50.Final.jar /opt/cassandra/lib/netty-all-4.1.50.Final.jar
-
 COPY --from=builder /build/management-api-common/target/datastax-mgmtapi-common-0.1.0-SNAPSHOT.jar /etc/cassandra/
 COPY --from=builder /build/management-api-agent/target/datastax-mgmtapi-agent-0.1.0-SNAPSHOT.jar /etc/cassandra/
 COPY --from=builder /build/management-api-server/target/datastax-mgmtapi-server-0.1.0-SNAPSHOT.jar /opt/mgmtapi/
@@ -56,6 +53,9 @@ RUN if [ "$TARGETARCH" = "arm64" ]; then \
 COPY scripts/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
   ln -sf /usr/local/bin/docker-entrypoint.sh /docker-entrypoint.sh
+
+RUN rm /opt/cassandra/lib/netty-all-4.0.44.Final.jar
+ADD https://search.maven.org/remotecontent?filepath=io/netty/netty-all/4.1.50.Final/netty-all-4.1.50.Final.jar /opt/cassandra/lib/netty-all-4.1.50.Final.jar
 
 EXPOSE 9103
 EXPOSE 8080
